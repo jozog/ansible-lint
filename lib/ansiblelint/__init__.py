@@ -184,17 +184,12 @@ class Match(object):
 
 class Runner(object):
 
-    def __init__(self, rules, playbook, tags, skip_list, exclude_paths,
+    def __init__(self, rules, playbooks_args, tags, skip_list, exclude_paths,
                  verbosity=0):
         self.rules = rules
         self.playbooks = set()
-        # assume role if directory
-        if os.path.isdir(playbook):
-            self.playbooks.add((playbook, 'role'))
-            self.playbook_dir = playbook
-        else:
+        for playbook in playbooks_args:
             self.playbooks.add((playbook, 'playbook'))
-            self.playbook_dir = os.path.dirname(playbook)
         self.tags = tags
         self.skip_list = skip_list
         self._update_exclude_paths(exclude_paths)
@@ -228,7 +223,7 @@ class Runner(object):
         visited = set()
         while (visited != self.playbooks):
             for arg in self.playbooks - visited:
-                for child in ansiblelint.utils.find_children(arg, self.playbook_dir):
+                for child in ansiblelint.utils.find_children(arg, os.path.dirname(arg[0])):
                     if self.is_excluded(child['path']):
                         continue
                     self.playbooks.add((child['path'], child['type']))
@@ -236,7 +231,7 @@ class Runner(object):
                 visited.add(arg)
 
         matches = list()
-        for file in files:
+        for file in [dict(t) for t in set([tuple(sorted(d.items())) for d in files])]:
             if self.verbosity > 0:
                 print("Examining %s of type %s" % (file['path'], file['type']))
             matches.extend(self.rules.run(file, tags=set(self.tags),

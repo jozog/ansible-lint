@@ -114,11 +114,10 @@ def main():
 
     playbooks = set(args)
     matches = list()
-    for playbook in playbooks:
-        runner = ansiblelint.Runner(rules, playbook, options.tags,
-                                    options.skip_list, options.exclude_paths,
-                                    options.verbosity)
-        matches.extend(runner.run())
+    runner = ansiblelint.Runner(rules, playbooks, options.tags,
+                                options.skip_list, options.exclude_paths,
+                                options.verbosity)
+    matches.extend(runner.run())
 
     matches.sort(key=lambda x: (x.filename, x.linenumber, x.rule.id))
 
